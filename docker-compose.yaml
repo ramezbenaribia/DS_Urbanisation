@@ -1,0 +1,18 @@
+version: "3.9"
+
+services:
+  app:
+    # the line means that the image will be build from the Dockerfile and use it here for this container
+    build: .
+    container_name: urbanisation-app
+
+    # load the .env file so we can use its variables
+    env_file:
+      - .env
+    # the port that will be exposed on 
+    ports:
+      - ${PORT}:${PORT}
+
+
+   
+

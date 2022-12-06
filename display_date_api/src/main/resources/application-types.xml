@@ -1,0 +1,67 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<types:mule xmlns:types="http://www.mulesoft.org/schema/mule/types">
+  <types:catalog>
+    <types:type name="date" format="xml">
+      <types:example format="xml" element="response" location="examples/day_example.xml"/>
+    </types:type>
+    <types:type name="return_date" format="json">
+      <types:shape format="weave" example="examples/response_date-2.json"><![CDATA[%dw 2.0
+
+type return_date = {|
+  day_of_week: String, 
+  day_of_month: Number {"typeId": "int"}, 
+  month: String, 
+  year: Number {"typeId": "int"}
+|} {"example": "{\\\"day_of_week\\\":\\\"Monday\\\",\\\"day_of_month\\\":12,\\\"month\\\":\\\"March\\\",\\\"year\\\":2019}"}
+
+]]></types:shape>
+    </types:type>
+    <types:type name="month" format="xml">
+      <types:example format="xml" element="response" location="examples/month_example.xml"/>
+    </types:type>
+    <types:type name="final_response" format="json">
+      <types:shape format="weave" example="examples/final_reponse.json"><![CDATA[%dw 2.0
+
+type final_response = {| date: String |} {"example": "{\\\"date\\\":\\\"Monday\\\"}"}
+
+]]></types:shape>
+    </types:type>
+  </types:catalog>
+  <types:enrichment select="#52548bfa-e34c-4798-a574-919b3dc51cdb">
+    <types:processor-declaration>
+      <types:output-event>
+        <types:message>
+          <types:payload type="final_response"/>
+        </types:message>
+      </types:output-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#83a67f95-8c9c-4eb2-a6fc-1a3df986106e">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="date"/>
+        </types:message>
+      </types:input-event>
+      <types:output-event>
+        <types:message>
+          <types:payload type="return_date"/>
+        </types:message>
+      </types:output-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#ce7fd804-5da7-4649-a9e0-500d512c513a">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="month"/>
+        </types:message>
+      </types:input-event>
+      <types:output-event>
+        <types:message>
+          <types:payload type="return_date"/>
+        </types:message>
+      </types:output-event>
+    </types:processor-declaration>
+  </types:enrichment>
+</types:mule>

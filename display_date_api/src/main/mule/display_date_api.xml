@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:sockets="http://www.mulesoft.org/schema/mule/sockets"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/sockets http://www.mulesoft.org/schema/mule/sockets/current/mule-sockets.xsd
+http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="4adfac62-891c-430d-87ed-2111bcefd4ae" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<http:request-config name="HTTP_Request_configuration" doc:name="HTTP Request configuration" doc:id="e3e1a95d-57f0-4bcf-a2e8-0b8d9f0c2425" basePath="/api">
+		<http:request-connection host="localhost" port="8009" />
+	</http:request-config>
+	<flow name="display_date_apiFlow" doc:id="34ee903f-6fb6-483d-beab-35611f0f3d48" >
+		<http:listener doc:name="Listener" doc:id="7033fc98-5c71-4ba6-9b56-f448a79698e5" config-ref="HTTP_Listener_config" path="/date"/>
+		<scatter-gather doc:name="Scatter-Gather" doc:id="81f685e9-dd3e-4652-9475-d8302b5df9c5">
+			<route>
+				<http:request method="GET" doc:name="Request" doc:id="4f9c819b-53b1-43ed-a211-1072d3e2e764" config-ref="HTTP_Request_configuration" path="/days/day_of_week">
+			<http:query-params><![CDATA[#[output application/java
+---
+{
+	"num" : 2
+}]]]></http:query-params>
+		</http:request>
+				<ee:transform doc:name="Transform Message" doc:id="83a67f95-8c9c-4eb2-a6fc-1a3df986106e" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	day_of_week: payload.response.content,
+	day_of_month: 12,
+	year: 2019
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</route>
+			<route >
+				<http:request method="GET" doc:name="Request" doc:id="8780f722-f1e5-4630-9be1-de40076c8402" config-ref="HTTP_Request_configuration" path="/months/month_of_year">
+					<http:query-params ><![CDATA[#[output application/java
+---
+{
+	"num" : 3
+}]]]></http:query-params>
+				</http:request>
+				<ee:transform doc:name="Transform Message" doc:id="ce7fd804-5da7-4649-a9e0-500d512c513a">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	month: payload.response.content
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</route>
+		</scatter-gather>
+		<ee:transform doc:name="Transform Message" doc:id="52548bfa-e34c-4798-a574-919b3dc51cdb" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	date: (((payload."0".payload.day_of_week default "") ++"," ++ payload."1".payload.month) ++ payload."0".payload.day_of_month as String) ++"," ++ payload."0".payload.year as String,
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+</mule>
